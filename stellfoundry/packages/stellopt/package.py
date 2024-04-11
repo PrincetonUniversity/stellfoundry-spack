@@ -53,8 +53,8 @@ class Stellopt(Package):
         makefile = FileFilter(os.path.join("SHARE", "make_perlmutter.inc"))
         makefile.filter(r"^\s*NETCDF_DIR\s*=.*",  f"  NETCDF_DIR = {self.spec['netcdf-fortran'].prefix}")
         makefile.filter(r"^\s*HDF5_DIR\s*=.*",  f"  HDF5_DIR = {self.spec['hdf5'].prefix}")
-        makefile.filter(r"^\s*MYHOME\s*=.*",  f"  MYHOME = {self.spec.prefix}")
+        makefile.filter(r"^\s*MYHOME\s*=.*",  f"  MYHOME = {os.getcwd()}")
 
         cmd = "./build_all -o release -j 4 BEAMS3D"
-        # subprocess.Popen(cmd, shell=True, env=os.environ, cwd=os.getcwd())
-        subprocess.Popen(cmd, shell=True)
+        subprocess.check_output(cmd, shell=True, env=os.environ, cwd=os.getcwd())
+        install_tree(".", prefix)
