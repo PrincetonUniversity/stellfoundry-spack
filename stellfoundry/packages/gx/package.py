@@ -36,9 +36,10 @@ class Gx(Package):
     version("develop", branch="gx")
 
     # FIXME: Add dependencies if required.
-    depends_on("netcdf-c+parallel-netcdf")
+    depends_on("netcdf-c +parallel-netcdf")
     depends_on("cuda")
     depends_on("gsl")
+    depends_on("nccl@1.18.3-cu12")
 
     def install(self, spec, prefix):
         os.environ["CC"] = self.compiler.cc
@@ -48,14 +49,21 @@ class Gx(Package):
         os.environ["MPICXX"] = self.compiler.cxx
         os.environ["MPIFC"] = self.compiler.fc
         os.environ["GK_SYSTEM"] = "perlmutter"
+        os.environ["NETCDF_DIR"] = self.spec["netcdf-c"].prefix
         os.environ["GSL_ROOT"] = self.spec["gsl"].prefix
         os.environ["LD_LIBRARY_PATH"] = f'{self.spec["gsl"].prefix}/lib:' + os.getenv("LD_LIBRARY_PATH", "")
+        print("nccl:", self.spec["nccl"].prefix)
+        print("netcdf-c:", self.spec["netcdf-c"].prefix)
 
-        # makefile = FileFilter(os.path.join("SHARE", "make_perlmutter.inc"))
-        # makefile.filter(r"^\s*NETCDF_DIR\s*=.*",  f"  NETCDF_DIR = {self.spec['netcdf-fortran'].prefix}")
-        # makefile.filter(r"^\s*HDF5_DIR\s*=.*",  f"  HDF5_DIR = {self.spec['hdf5'].prefix}")
-        # makefile.filter(r"^\s*MYHOME\s*=.*",  f"  MYHOME = {os.getcwd()}")
+        makefile = FileFilter(os.path.join("Makefiles", "Makefile.perlmutter"))
+        makefile.filter(r"-lnetcdff",  "")
 
+        #cmd = "make test_make"
         cmd = "make"
-        subprocess.check_output(cmd, shell=True, env=os.environ, cwd=os.getcwd())
-        # install_tree(".", prefix)
+        process = subprocess.Popen(cmd, shell=True, env=os.environ, cwd=os.getcwd(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+
+        print("stdout:", stdout)
+        print("stderr:", stderr)
+        install_tree(".", prefix)
+
