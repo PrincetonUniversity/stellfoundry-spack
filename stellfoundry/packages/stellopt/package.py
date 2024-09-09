@@ -30,7 +30,7 @@ class Stellopt(Package):
 
     # Package info
     homepage = "https://github.com/PrincetonUniversity/STELLOPT"
-    git = "https://github.com/jychoi-hpc/STELLOPT.git"
+    git = "https://github.com/PrincetonUniversity/STELLOPT.git"
     maintainers("github_user1", "github_user2")
 
     version("develop", branch="develop")
@@ -46,6 +46,8 @@ class Stellopt(Package):
         os.environ["MPICC"] = self.compiler.cc
         os.environ["MPICXX"] = self.compiler.cxx
         os.environ["MPIFC"] = self.compiler.fc
+        os.environ["NETCDF_DIR"] = self.spec['netcdf-fortran'].prefix
+        os.environ["HDF5_DIR"] = self.spec['hdf5'].prefix
 
         os.environ["STELLOPT_PATH"] = os.getcwd()
         os.environ["MACHINE"] = "perlmutter"
@@ -54,6 +56,7 @@ class Stellopt(Package):
         makefile.filter(r"^\s*NETCDF_DIR\s*=.*",  f"  NETCDF_DIR = {self.spec['netcdf-fortran'].prefix}")
         makefile.filter(r"^\s*HDF5_DIR\s*=.*",  f"  HDF5_DIR = {self.spec['hdf5'].prefix}")
         makefile.filter(r"^\s*MYHOME\s*=.*",  f"  MYHOME = {os.getcwd()}")
+        makefile.filter(r"-lhdf5hl_fortran",  "-lhdf5_hl_fortran")
 
         cmd = "./build_all -o release -j 4 BEAMS3D"
         subprocess.check_output(cmd, shell=True, env=os.environ, cwd=os.getcwd())
