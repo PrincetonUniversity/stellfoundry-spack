@@ -25,7 +25,7 @@ import os
 import subprocess
 
 
-class Gx(Package):
+class Gx(MakefilePackage):
     """GX, a GPU-native gyrokinetic turbulence code for tokamak and stellarator design. """
 
     # Package info
@@ -36,34 +36,26 @@ class Gx(Package):
     version("develop", branch="gx")
 
     # FIXME: Add dependencies if required.
-    depends_on("netcdf-c +parallel-netcdf")
-    depends_on("cuda")
+    depends_on("nccl+cuda cuda_arch=80")
     depends_on("gsl")
-    depends_on("nccl@1.18.3-cu12")
+    depends_on("netcdf-c")
+
+    def setup_build_environment(self, env):
+        print("gsl:", self.spec["gsl"].prefix)
+        print("nccl:", self.spec["nccl"].prefix)
+        #print("netcdf-c:", self.spec["netcdf-c"].prefix)
+        env.set("GK_SYSTEM", "perlmutter")
+        #env.set("NETCDF_DIR", self.spec["netcdf-c"].prefix)
+        env.set("GSL_ROOT", self.spec["gsl"].prefix)
+        env.set("LD_LIBRARY_PATH", f'{self.spec["gsl"].prefix}/lib:' + os.getenv("LD_LIBRARY_PATH", ""))
+
+    def edit(self, spec, prefix):
+        makefile = FileFilter(os.path.join("Makefiles", "Makefile.perlmutter"))
+        makefile.filter(r"-lnetcdff",  "") 
+
+    def build(self, spec, prefix):
+        make()
 
     def install(self, spec, prefix):
-        os.environ["CC"] = self.compiler.cc
-        os.environ["CXX"] = self.compiler.cxx
-        os.environ["FC"] = self.compiler.fc
-        os.environ["MPICC"] = self.compiler.cc
-        os.environ["MPICXX"] = self.compiler.cxx
-        os.environ["MPIFC"] = self.compiler.fc
-        os.environ["GK_SYSTEM"] = "perlmutter"
-        os.environ["NETCDF_DIR"] = self.spec["netcdf-c"].prefix
-        os.environ["GSL_ROOT"] = self.spec["gsl"].prefix
-        os.environ["LD_LIBRARY_PATH"] = f'{self.spec["gsl"].prefix}/lib:' + os.getenv("LD_LIBRARY_PATH", "")
-        print("nccl:", self.spec["nccl"].prefix)
-        print("netcdf-c:", self.spec["netcdf-c"].prefix)
-
-        makefile = FileFilter(os.path.join("Makefiles", "Makefile.perlmutter"))
-        makefile.filter(r"-lnetcdff",  "")
-
-        #cmd = "make test_make"
-        cmd = "make"
-        process = subprocess.Popen(cmd, shell=True, env=os.environ, cwd=os.getcwd(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-
-        print("stdout:", stdout)
-        print("stderr:", stderr)
         install_tree(".", prefix)
 
