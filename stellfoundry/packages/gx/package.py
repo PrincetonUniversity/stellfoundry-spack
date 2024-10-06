@@ -43,10 +43,11 @@ class Gx(MakefilePackage):
     def setup_build_environment(self, env):
         print("gsl:", self.spec["gsl"].prefix)
         print("nccl:", self.spec["nccl"].prefix)
-        #print("netcdf-c:", self.spec["netcdf-c"].prefix)
+        print("netcdf-c:", self.spec["netcdf-c"].prefix)
         env.set("GK_SYSTEM", "perlmutter")
-        #env.set("NETCDF_DIR", self.spec["netcdf-c"].prefix)
+        env.set("NETCDF_DIR", self.spec["netcdf-c"].prefix)
         env.set("GSL_ROOT", self.spec["gsl"].prefix)
+        env.set("NCCL_HOME", self.spec["nccl"].prefix)
         env.set("LD_LIBRARY_PATH", f'{self.spec["gsl"].prefix}/lib:' + os.getenv("LD_LIBRARY_PATH", ""))
 
     def edit(self, spec, prefix):
