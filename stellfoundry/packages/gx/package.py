@@ -58,5 +58,12 @@ class Gx(MakefilePackage):
         make()
 
     def install(self, spec, prefix):
-        install_tree(".", prefix)
+        mkdirp(prefix.bin)
+        mkdirp(prefix.lib)
+        mkdirp(prefix.share)
+        mkdirp(os.path.join(prefix.share, "post_processing"))
+        install("gx", prefix.bin)
+        install("libgx.a", prefix.lib)
+        install_tree("post_processing", os.path.join(prefix.share, "post_processing"))
+
 
