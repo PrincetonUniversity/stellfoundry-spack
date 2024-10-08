@@ -58,6 +58,10 @@ class Stellopt(Package):
         makefile.filter(r"^\s*MYHOME\s*=.*",  f"  MYHOME = {os.getcwd()}")
         makefile.filter(r"-lhdf5hl_fortran",  "-lhdf5_hl_fortran")
 
-        cmd = "./build_all -o release -j 4 BEAMS3D"
+        cmd = "./build_all -o release BEAMS3D"
         subprocess.check_output(cmd, shell=True, env=os.environ, cwd=os.getcwd())
-        install_tree(".", prefix)
+        mkdirp(prefix.bin)
+        mkdirp(prefix.lib)
+        install("xbeams3d", prefix.bin)
+        install("libstell.a", prefix.lib)
+        install("libstell.so", prefix.lib)
